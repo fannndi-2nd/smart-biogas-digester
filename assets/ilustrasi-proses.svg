@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" width="1600" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi proses biogas</title>
+  <desc id="desc">Empat tahap: limbah organik, digester anaerob, biogas metana, lalu energi dan pupuk.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#04140f"/>
+      <stop offset="100%" stop-color="#051b14"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a3e635"/>
+      <stop offset="55%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity=".13"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity=".022" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#34d399" fill-opacity=".7"/>
+    </marker>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000" flood-opacity=".3"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="600" fill="url(#bg)"/>
+  <rect width="1600" height="600" fill="url(#grid)"/>
+  <circle cx="240" cy="120" r="300" fill="url(#glow)"/>
+  <circle cx="1380" cy="480" r="320" fill="url(#glow)"/>
+
+  <text x="60" y="62" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="3.4">PROSES ANAEROB</text>
+  <text x="60" y="104" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="-1">Dari limbah menjadi energi</text>
+  <text x="60" y="130" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="13.5">Empat tahap sederhana yang terjadi di dalam smart biogas digester.</text>
+
+  <!-- cards -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="166" width="340" height="338" rx="26" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="60" y="166" width="340" height="4" rx="2" fill="url(#accent)"/>
+
+    <rect x="440" y="166" width="340" height="338" rx="26" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="440" y="166" width="340" height="4" rx="2" fill="url(#accent)"/>
+
+    <rect x="820" y="166" width="340" height="338" rx="26" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="820" y="166" width="340" height="4" rx="2" fill="url(#accent)"/>
+
+    <rect x="1200" y="166" width="340" height="338" rx="26" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="1200" y="166" width="340" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+
+  <!-- numbers -->
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#648276">
+    <text x="86" y="202">01</text>
+    <text x="466" y="202">02</text>
+    <text x="846" y="202">03</text>
+    <text x="1226" y="202">04</text>
+  </g>
+  <g stroke="#1f4d3d">
+    <path d="M86 212h86"/><path d="M466 212h86"/><path d="M846 212h86"/><path d="M1226 212h86"/>
+  </g>
+
+  <!-- 01 limbah -->
+  <g transform="translate(171 204) scale(.85)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 54h84l-10 76a14 14 0 0 1-14 12H52a14 14 0 0 1-14-12Z" fill="#0a2e22" stroke="#a3e635" stroke-width="3"/>
+    <path d="M20 54h100" stroke="#a3e635" stroke-width="4"/>
+    <path d="M40 42h60" stroke="#a3e635" stroke-width="4"/>
+    <path d="M44 42c0-16 12-28 26-28s26 12 26 28" stroke="#a3e635" stroke-width="3" fill="none"/>
+    <path d="M58 104c8-12 18-16 30-16-2 14-12 24-30 16Z" fill="#a3e635" fill-opacity=".25" stroke="#a3e635" stroke-width="2"/>
+    <path d="M58 104c6-8 12-12 20-14" stroke="#a3e635" stroke-width="2"/>
+    <circle cx="88" cy="78" r="5" fill="#a3e635" fill-opacity=".45" stroke="none"/>
+    <circle cx="54" cy="88" r="3" fill="#a3e635" fill-opacity=".4" stroke="none"/>
+  </g>
+  <text x="230" y="388" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Limbah organik</text>
+  <text x="230" y="418" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">Sisa makanan, sayur, dan</text>
+  <text x="230" y="438" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">limbah rumah tangga.</text>
+  <text x="230" y="468" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" text-anchor="middle">Bahan baku biogas</text>
+
+  <!-- 02 digester -->
+  <g transform="translate(546 199) scale(.85)">
+    <rect x="34" y="46" width="82" height="112" rx="16" fill="#0a2e22" stroke="#34d399" stroke-width="3"/>
+    <path d="M46 46V34c0-8 6-14 14-14h30c8 0 14 6 14 14v12" stroke="#34d399" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M36 112q20-8 40 0t40 0v30c0 9-7 16-16 16H52c-9 0-16-7-16-16Z" fill="#4d7c0f" fill-opacity=".6"/>
+    <path d="M36 112q20-8 40 0t40 0" stroke="#a3e635" stroke-opacity=".5" stroke-width="2" fill="none"/>
+    <circle cx="62" cy="126" r="4" fill="#a3e635" fill-opacity=".5"/>
+    <circle cx="88" cy="136" r="3" fill="#a3e635" fill-opacity=".45"/>
+    <circle cx="74" cy="148" r="2.5" fill="#a3e635" fill-opacity=".4"/>
+    <rect x="54" y="14" width="42" height="24" rx="7" fill="#fb923c"/>
+    <rect x="60" y="6" width="30" height="10" rx="4" fill="#fdba74"/>
+    <rect x="60" y="30" width="30" height="18" rx="5" fill="#030712" stroke="#34d399" stroke-opacity=".5"/>
+    <path d="M66 39l4-4 3 5 4-7 3 5 4-3" stroke="#34d399" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <circle cx="104" cy="60" r="3" fill="#34d399"/>
+  </g>
+  <text x="610" y="388" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Digester anaerob</text>
+  <text x="610" y="418" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">Bakteri menguraikan limbah</text>
+  <text x="610" y="438" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">tanpa oksigen.</text>
+  <text x="610" y="468" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" text-anchor="middle">Suhu &amp; kelembapan dipantau</text>
+
+  <!-- 03 biogas -->
+  <g transform="translate(913 200) scale(.8)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 104h64" stroke="#64748b" stroke-width="12"/>
+    <path d="M94 104h20c12 0 20 8 20 20v18" stroke="#64748b" stroke-width="12" fill="none"/>
+    <path d="M30 104h64" stroke="#94a3b8" stroke-width="4" opacity=".5"/>
+    <path d="M94 104h20c12 0 20 8 20 20v18" stroke="#94a3b8" stroke-width="4" fill="none" opacity=".5"/>
+    <path d="M134 146c-18-10-28-26-28-42 0-18 12-32 28-44 16 12 28 26 28 44 0 16-10 32-28 42Z" fill="#fbbf24" fill-opacity=".16" stroke="#fbbf24" stroke-width="3"/>
+    <path d="M134 128c-8-6-12-14-12-22 0-9 5-17 12-24 7 7 12 15 12 24 0 8-4 16-12 22Z" fill="#fbbf24" fill-opacity=".35" stroke="none"/>
+    <circle cx="62" cy="60" r="10" fill="#0a2e22" stroke="#34d399" stroke-width="2"/>
+    <circle cx="86" cy="40" r="7" fill="#0a2e22" stroke="#34d399" stroke-width="2"/>
+    <circle cx="98" cy="66" r="6" fill="#0a2e22" stroke="#34d399" stroke-width="2"/>
+    <path d="M70 56l12-10M80 44l12 16M92 44v18" stroke="#34d399" stroke-opacity=".5" stroke-width="1.6"/>
+  </g>
+  <text x="990" y="388" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Biogas metana</text>
+  <text x="990" y="418" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">Gas CH₄ dialirkan lewat pipa</text>
+  <text x="990" y="438" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">menuju kompor atau penyimpanan.</text>
+  <text x="990" y="468" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" text-anchor="middle">CH₄ ±60–70% · CO₂ ±30–40%</text>
+
+  <!-- 04 energi -->
+  <g transform="translate(1290 203) scale(.8)" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="28" y="96" width="120" height="34" rx="12" fill="#0a2e22" stroke="#22d3ee" stroke-width="3"/>
+    <path d="M66 96V82c0-10 8-18 18-18h8" stroke="#94a3b8" stroke-width="8" fill="none"/>
+    <path d="M96 42c-16 6-24 18-24 32 0 12 9 22 22 22s22-10 22-22c0-10-7-20-20-32Z" fill="#22d3ee" fill-opacity=".16" stroke="#22d3ee" stroke-width="3"/>
+    <path d="M96 62c-7 4-10 10-10 16 0 7 5 12 12 12s12-5 12-12c0-6-5-12-14-16Z" fill="#22d3ee" fill-opacity=".3" stroke="none"/>
+    <path d="M148 130c-8-12-2-22 4-30 2 10 8 12 8 20 0 6-5 10-12 10Z" fill="#a3e635" fill-opacity=".28" stroke="#a3e635" stroke-width="2"/>
+    <path d="M152 130v-24" stroke="#a3e635" stroke-width="2"/>
+    <path d="M120 130c8-10 18-12 28-10-2 12-12 20-28 10Z" fill="#a3e635" fill-opacity=".22" stroke="#a3e635" stroke-width="2"/>
+  </g>
+  <text x="1370" y="388" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Energi &amp; pupuk</text>
+  <text x="1370" y="418" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">Gas untuk memasak, sisa</text>
+  <text x="1370" y="438" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" text-anchor="middle">fermentasi jadi pupuk organik.</text>
+  <text x="1370" y="468" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" text-anchor="middle">Siklus limbah yang lebih bersih</text>
+
+  <!-- arrows -->
+  <g stroke="#34d399" stroke-opacity=".55" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M404 330h28"/>
+    <path d="M784 330h28"/>
+    <path d="M1164 330h28"/>
+  </g>
+
+  <!-- footer note -->
+  <g>
+    <rect x="60" y="530" width="1480" height="46" rx="14" fill="#052e22" stroke="#1f4d3d"/>
+    <text x="84" y="558" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5">Proses anaerob butuh lingkungan tanpa oksigen, suhu stabil, dan waktu fermentasi beberapa hari sampai minggu.</text>
+    <text x="1516" y="558" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" letter-spacing="1.2">KELOMPOK 6 · 2026</text>
+  </g>
+</svg>
+

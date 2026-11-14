@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-labelledby="title desc">
+  <title id="title">Diagram blok Smart Biogas Digester</title>
+  <desc id="desc">Alur dari sensor MQ-4 dan DHT22 ke ESP32, lalu ke LCD, Blynk, Google Sheets, dan dashboard web.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#04140f"/>
+      <stop offset="55%" stop-color="#03120d"/>
+      <stop offset="100%" stop-color="#051b14"/>
+    </linearGradient>
+    <radialGradient id="glowGreen" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity=".12"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a3e635"/>
+      <stop offset="50%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity=".025" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#5eead4"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#fbbf24"/>
+    </marker>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".3"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <circle cx="280" cy="170" r="360" fill="url(#glowGreen)"/>
+  <circle cx="1320" cy="690" r="420" fill="url(#glowCyan)"/>
+
+  <!-- dekorasi sirkuit -->
+  <g stroke="#34d399" stroke-opacity=".10" fill="none" stroke-width="2">
+    <path d="M0 190h90l24 24h56"/>
+    <path d="M1600 120h-110l-22 22h-48"/>
+    <path d="M0 660h70l30-30h54"/>
+    <path d="M1600 800h-90l-26-26h-52"/>
+    <circle cx="170" cy="214" r="4" fill="#34d399" fill-opacity=".22" stroke="none"/>
+    <circle cx="1420" cy="142" r="4" fill="#34d399" fill-opacity=".22" stroke="none"/>
+    <circle cx="154" cy="630" r="4" fill="#34d399" fill-opacity=".22" stroke="none"/>
+  </g>
+
+  <!-- header -->
+  <text x="80" y="76" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="4">ARSITEKTUR SISTEM</text>
+  <text x="80" y="124" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="800" letter-spacing="-1">Smart Biogas Digester</text>
+  <text x="80" y="154" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="16">Dari sensor di digester sampai dashboard web.</text>
+
+  <rect x="1300" y="62" width="220" height="44" rx="22" fill="#052e22" stroke="#34d399" stroke-opacity=".35"/>
+  <circle cx="1324" cy="84" r="5" fill="#34d399"/>
+  <text x="1340" y="89" fill="#a7f3d0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1.5">KELOMPOK 6 · IOT</text>
+
+  <!-- sensor group -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="210" width="300" height="230" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="80" y="210" width="300" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="104" y="246" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">INPUT SENSOR</text>
+
+  <rect x="100" y="262" width="260" height="72" rx="14" fill="#0a2e22" stroke="#14532d"/>
+  <text x="118" y="290" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="700">MQ-4</text>
+  <text x="118" y="312" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5">Metana (CH₄) · keluaran analog</text>
+  <g stroke="#34d399" stroke-opacity=".7" fill="none" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="330" cy="298" r="12"/>
+    <path d="M324 298h12M330 292v12"/>
+  </g>
+
+  <rect x="100" y="346" width="260" height="72" rx="14" fill="#0a2e22" stroke="#14532d"/>
+  <text x="118" y="374" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="700">DHT22</text>
+  <text x="118" y="396" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5">Suhu &amp; kelembapan · digital</text>
+  <g stroke="#22d3ee" stroke-opacity=".7" fill="none" stroke-width="1.8" stroke-linecap="round">
+    <path d="M330 370v18a8 8 0 1 1-16 0v-18a8 8 0 1 1 16 0Z"/>
+    <path d="M322 374v14"/>
+  </g>
+  <text x="104" y="430" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">AO → GPIO34 · DATA → GPIO4 · 3V3 / 5V</text>
+
+  <!-- ESP32 -->
+  <g filter="url(#shadow)">
+    <rect x="460" y="210" width="360" height="230" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="460" y="210" width="360" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="484" y="246" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">KONTROLLER</text>
+  <text x="484" y="292" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="-1">ESP32</text>
+  <text x="484" y="314" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="12">DevKit V1 · 30 pin · WiFi 2,4 GHz</text>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="11.5" fill="#b8d8ca">
+    <circle cx="490" cy="346" r="3" fill="#34d399"/>
+    <text x="502" y="350">ADC1 12-bit untuk MQ-4</text>
+    <circle cx="490" cy="368" r="3" fill="#34d399"/>
+    <text x="502" y="372">I2C LCD di GPIO21 / GPIO22</text>
+    <circle cx="490" cy="390" r="3" fill="#34d399"/>
+    <text x="502" y="394">Timer non-blocking + reconnect</text>
+  </g>
+
+  <g>
+    <rect x="682" y="334" width="112" height="78" rx="12" fill="#0b1f18" stroke="#34d399" stroke-opacity=".45"/>
+    <text x="738" y="366" fill="#a7f3d0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="1.4">ESP32</text>
+    <text x="738" y="384" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="8" text-anchor="middle">WROOM-32</text>
+    <g stroke="#34d399" stroke-opacity=".35" stroke-width="2">
+      <path d="M690 340h-10M690 352h-10M690 364h-10M690 376h-10M690 388h-10M690 400h-10"/>
+      <path d="M786 340h10M786 352h10M786 364h10M786 376h10M786 388h10M786 400h10"/>
+    </g>
+  </g>
+
+  <!-- LCD -->
+  <g filter="url(#shadow)">
+    <rect x="460" y="510" width="360" height="150" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="460" y="510" width="360" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="484" y="546" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">OUTPUT LOKAL</text>
+  <text x="484" y="584" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700">LCD 16×2 I2C</text>
+  <text x="484" y="607" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5">Alamat 0x27 · halaman bergantian</text>
+  <text x="484" y="626" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">CH₄ &amp; status · suhu &amp; RH · WiFi &amp; IP</text>
+
+  <g>
+    <rect x="698" y="552" width="96" height="58" rx="8" fill="#052e22" stroke="#34d399" stroke-opacity=".45"/>
+    <rect x="706" y="560" width="80" height="42" rx="3" fill="#03120d"/>
+    <path d="M712 582l10-8 8 10 10-14 8 12 10-6 8 4" stroke="#34d399" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="746" y="624" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="8" text-anchor="middle">I2C 0x27</text>
+  </g>
+
+  <!-- Blynk -->
+  <g filter="url(#shadow)">
+    <rect x="960" y="210" width="270" height="145" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="960" y="210" width="270" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="984" y="246" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">CLOUD · REAL-TIME</text>
+  <text x="984" y="284" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Blynk IoT</text>
+  <text x="984" y="307" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">V0 status · V1 RH · V2 CH₄</text>
+  <text x="984" y="323" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">V3 suhu · V4 RSSI · 5 detik</text>
+  <g stroke="#34d399" stroke-opacity=".55" fill="none" stroke-width="1.8" stroke-linecap="round">
+    <path d="M1170 300a26 26 0 0 1 26 26"/>
+    <path d="M1170 284a42 42 0 0 1 42 42"/>
+  </g>
+
+  <!-- Sheets -->
+  <g filter="url(#shadow)">
+    <rect x="960" y="390" width="270" height="145" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="960" y="390" width="270" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="984" y="426" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">CLOUD · LOG</text>
+  <text x="984" y="464" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Google Sheets</text>
+  <text x="984" y="487" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">Apps Script /exec · POST 60 detik</text>
+  <text x="984" y="503" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">Timestamp · ppm · RH · suhu · status</text>
+  <g stroke="#22d3ee" stroke-opacity=".6" fill="none" stroke-width="1.8">
+    <rect x="1172" y="454" width="38" height="46" rx="4"/>
+    <path d="M1172 466h38M1172 478h38M1172 490h38M1184 454v46M1198 454v46"/>
+  </g>
+
+  <!-- Dashboard -->
+  <g filter="url(#shadow)">
+    <rect x="1280" y="300" width="240" height="235" rx="24" fill="#06231a" stroke="#34d399" stroke-opacity=".55"/>
+    <rect x="1280" y="300" width="240" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="1304" y="336" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">OUTPUT WEB</text>
+  <text x="1304" y="374" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="700">Dashboard</text>
+  <text x="1304" y="396" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">Blynk live · riwayat Sheets</text>
+  <text x="1304" y="412" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">CSV · mode demo</text>
+  <g>
+    <rect x="1304" y="430" width="192" height="82" rx="8" fill="#03120d" stroke="#1f4d3d"/>
+    <path d="M1304 444h192" stroke="#1f4d3d"/>
+    <circle cx="1314" cy="437" r="2.5" fill="#fb7185"/>
+    <circle cx="1323" cy="437" r="2.5" fill="#fbbf24"/>
+    <circle cx="1332" cy="437" r="2.5" fill="#34d399"/>
+    <path d="M1316 496l24-16 20 8 22-22 20 12 24-26 20 8 24-16" stroke="#34d399" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1316 502h168" stroke="#34d399" stroke-opacity=".18"/>
+  </g>
+
+  <!-- Power -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="510" width="300" height="150" rx="24" fill="#06231a" stroke="#1f4d3d"/>
+    <rect x="80" y="510" width="300" height="4" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="104" y="546" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2">DAYA</text>
+  <text x="104" y="586" fill="#ecfdf5" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="800">5 V DC</text>
+  <text x="104" y="610" fill="#8fb3a5" font-family="Segoe UI, Arial, sans-serif" font-size="11.5">USB power bank / adaptor</text>
+  <text x="104" y="630" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">MQ-4 5 V · DHT22 3,3 V · LCD 5 V</text>
+  <g stroke="#fbbf24" stroke-opacity=".6" fill="none" stroke-width="2" stroke-linecap="round">
+    <path d="M338 570v-20h-18M338 592v20h-18M338 614v20h-18"/>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#5eead4" stroke-opacity=".7" stroke-width="2.2" fill="none" marker-end="url(#arrow)">
+    <path d="M380 325h68"/>
+    <path d="M640 440v58"/>
+    <path d="M820 300l128-20"/>
+    <path d="M820 380l128 70"/>
+    <path d="M1230 300l42 42"/>
+    <path d="M1230 462l42-42"/>
+  </g>
+  <g stroke="#fbbf24" stroke-opacity=".7" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrowAmber)">
+    <path d="M380 585h68"/>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#648276">
+    <text x="414" y="316" text-anchor="middle">analog</text>
+    <text x="654" y="480">I2C</text>
+    <text x="892" y="282" text-anchor="middle">WiFi</text>
+    <text x="892" y="432" text-anchor="middle">HTTP POST</text>
+    <text x="1256" y="320">realtime</text>
+    <text x="1256" y="452" text-anchor="end">JSON</text>
+    <text x="414" y="576" text-anchor="middle" fill="#b45309">5 V</text>
+  </g>
+
+  <!-- data flow strip -->
+  <g>
+    <rect x="80" y="690" width="1440" height="70" rx="18" fill="#06231a" stroke="#1f4d3d"/>
+    <text x="104" y="718" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="2.2">ALUR DATA</text>
+    <text x="104" y="742" fill="#b8d8ca" font-family="Segoe UI, Arial, sans-serif" font-size="15">Sensor → ESP32 → Blynk / Google Sheets → Dashboard web</text>
+    <text x="1496" y="732" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="11" text-anchor="end">Blynk 5 detik · Sheets 60 detik</text>
+  </g>
+
+  <!-- footer -->
+  <line x1="80" y1="806" x2="1520" y2="806" stroke="#1f4d3d"/>
+  <text x="80" y="836" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="11">Kelompok 6 · Internet of Things · 2026</text>
+  <text x="1520" y="836" fill="#648276" font-family="Segoe UI, Arial, sans-serif" font-size="11" text-anchor="end">MQ-4 · DHT22 · ESP32 · Blynk · Google Sheets</text>
+</svg>

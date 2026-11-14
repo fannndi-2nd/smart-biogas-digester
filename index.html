@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03120d">
+  <meta name="description" content="Dashboard monitoring Smart Biogas Digester: kadar metana, suhu, kelembapan, dan status perangkat secara real-time.">
+  <title>Smart Biogas Digester — Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23052e22'/%3E%3Cpath d='M23 8c-8 0-13 4-13 10 0 3 2 5 5 5 6 0 8-7 8-15Z' fill='%2334d399'/%3E%3Cpath d='M8 25c2-5 5-8 10-10' stroke='%23a3e635' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script src="assets/vendor/chart.umd.min.js" defer></script>
+  <style>
+    :root {
+      --bg: #03120d;
+      --bg-2: #051b14;
+      --card: rgba(255, 255, 255, .055);
+      --card-2: rgba(255, 255, 255, .028);
+      --line: rgba(255, 255, 255, .09);
+      --line-2: rgba(255, 255, 255, .14);
+      --text: #ecfdf5;
+      --muted: #8fb3a5;
+      --muted-2: #648276;
+      --green: #34d399;
+      --green-2: #22c55e;
+      --lime: #a3e635;
+      --cyan: #22d3ee;
+      --amber: #fbbf24;
+      --red: #fb7185;
+      --orange: #fb923c;
+      --font: "Segoe UI", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: "Cascadia Code", "Consolas", "SFMono-Regular", ui-monospace, monospace;
+      --radius: 24px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(900px 620px at 8% -10%, rgba(16, 185, 129, .18), transparent 62%),
+        radial-gradient(820px 540px at 96% -4%, rgba(34, 211, 238, .13), transparent 62%),
+        radial-gradient(760px 700px at 50% 112%, rgba(163, 230, 53, .07), transparent 60%),
+        var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 72%);
+      z-index: -1;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    img, svg { display: block; max-width: 100%; }
+    [hidden] { display: none !important; }
+
+    .ambient { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+    .ambient span {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .32;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    .ambient span:nth-child(1) { width: 380px; height: 380px; background: #059669; top: 12%; left: -150px; }
+    .ambient span:nth-child(2) { width: 320px; height: 320px; background: #0891b2; top: 42%; right: -130px; animation-delay: -5s; }
+    .ambient span:nth-child(3) { width: 260px; height: 260px; background: #65a30d; bottom: -100px; left: 38%; animation-delay: -9s; }
+    @keyframes drift { to { transform: translate3d(24px, -28px, 0) scale(1.08); } }
+
+    .wrap { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      background: rgba(3, 18, 13, .72);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner { display: flex; align-items: center; gap: 26px; min-height: 72px; }
+    .brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, rgba(52, 211, 153, .22), rgba(34, 211, 238, .08));
+      border: 1px solid rgba(52, 211, 153, .3);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 8px 24px rgba(16, 185, 129, .18);
+    }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .brand-text strong { font-size: 12.5px; letter-spacing: .14em; font-weight: 800; }
+    .brand-text small { margin-top: 4px; font-size: 9px; letter-spacing: .18em; color: var(--muted-2); font-weight: 700; }
+    .nav { display: flex; align-items: center; gap: 22px; margin-left: 12px; }
+    .nav a { font-size: 12.5px; color: var(--muted); font-weight: 600; transition: color .2s; }
+    .nav a:hover { color: var(--text); }
+    .top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+    .connection-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 13px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+      border: 1px solid var(--line-2);
+      background: rgba(255, 255, 255, .04);
+      color: var(--muted);
+      white-space: nowrap;
+      transition: .25s ease;
+    }
+    .connection-pill i {
+      width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+      box-shadow: 0 0 10px currentColor;
+    }
+    .connection-pill.live { color: #6ee7b7; border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .08); }
+    .connection-pill.live i { animation: pulse 2s ease-in-out infinite; }
+    .connection-pill.demo { color: #fcd34d; border-color: rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .08); }
+    .connection-pill.offline { color: #fda4af; border-color: rgba(251, 113, 133, .28); background: rgba(251, 113, 133, .07); }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
+
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 12px;
+      display: grid; place-items: center;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--line);
+      transition: .2s ease;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--line-2); background: rgba(255, 255, 255, .07); }
+    .icon-btn svg { width: 18px; height: 18px; }
+
+    /* ---------- hero ---------- */
+    .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: center; padding: 48px 0 30px; }
+    .eyebrow { margin: 0 0 14px; color: #6ee7b7; font-size: 10.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
+    .hero h1 { margin: 0; max-width: 14ch; font-size: clamp(2.35rem, 5vw, 4.35rem); line-height: 1.02; letter-spacing: -.045em; font-weight: 800; }
+    .hero h1 span {
+      background: linear-gradient(100deg, #a3e635 0%, #34d399 42%, #22d3ee 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead { max-width: 54ch; margin: 18px 0 22px; color: var(--muted); font-size: 14.5px; line-height: 1.7; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 11px; border-radius: 9px;
+      font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
+      color: #b8d8ca;
+      background: rgba(255, 255, 255, .035);
+      border: 1px solid var(--line);
+    }
+    .chip b { color: var(--text); font-weight: 700; }
+    .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .hero-art { position: relative; display: flex; justify-content: center; align-items: center; }
+    .hero-art::before {
+      content: ""; position: absolute; width: 72%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle, rgba(52, 211, 153, .14), transparent 66%);
+      filter: blur(10px);
+    }
+    .hero-art img { position: relative; width: min(470px, 100%); filter: drop-shadow(0 30px 50px rgba(0, 0, 0, .35)); animation: float 7s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .art-badge {
+      position: absolute; bottom: 12%; left: 2%;
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; border-radius: 999px;
+      background: rgba(5, 46, 34, .85);
+      border: 1px solid rgba(52, 211, 153, .24);
+      backdrop-filter: blur(12px);
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #a7f3d0;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+    .art-badge i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); }
+
+    /* ---------- cards ---------- */
+    .card {
+      position: relative;
+      background: linear-gradient(160deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .022));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .dashboard-grid { display: grid; grid-template-columns: 1.32fr .92fr; gap: 18px; align-items: stretch; }
+    .primary { padding: 26px; overflow: hidden; }
+    .primary::after {
+      content: ""; position: absolute; width: 320px; height: 320px; right: -120px; top: -140px;
+      border-radius: 50%; background: radial-gradient(circle, rgba(52, 211, 153, .12), transparent 68%);
+      pointer-events: none;
+    }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; position: relative; z-index: 1; }
+    .card-label { margin: 0 0 7px; font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-2); }
+    .card h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; font-weight: 750; }
+    .card h2 span { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0; }
+    .card h2 sub { font-size: .7em; color: var(--muted); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 999px;
+      font-size: 10px; font-weight: 850; letter-spacing: .13em;
+      border: 1px solid; white-space: nowrap;
+    }
+    .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+    .status-pill.ok { color: #6ee7b7; background: rgba(52, 211, 153, .09); border-color: rgba(52, 211, 153, .28); }
+    .status-pill.warn { color: #fcd34d; background: rgba(251, 191, 36, .09); border-color: rgba(251, 191, 36, .3); }
+    .status-pill.danger { color: #fda4af; background: rgba(251, 113, 133, .09); border-color: rgba(251, 113, 133, .3); }
+    .status-pill.warmup { color: #67e8f9; background: rgba(34, 211, 238, .09); border-color: rgba(34, 211, 238, .3); }
+    .status-pill.idle { color: var(--muted); background: rgba(255, 255, 255, .04); border-color: var(--line-2); }
+
+    .gauge-wrap { position: relative; width: min(250px, 70%); margin: 8px auto 4px; }
+    .gauge { width: 100%; transform: rotate(-90deg); overflow: visible; }
+    .gauge-track { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: 13; }
+    .gauge-value {
+      fill: none; stroke: var(--green); stroke-width: 13; stroke-linecap: round;
+      stroke-dasharray: 578.05; stroke-dashoffset: 578.05;
+      transition: stroke-dashoffset .8s cubic-bezier(.22, 1, .36, 1), stroke .4s ease;
+      filter: drop-shadow(0 0 9px rgba(52, 211, 153, .6));
+    }
+    .gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 6px; }
+    .gauge-center strong { font-family: var(--mono); font-size: clamp(2.3rem, 5vw, 3.2rem); line-height: 1; letter-spacing: -.06em; font-weight: 700; }
+    .gauge-center span { margin-top: 6px; color: var(--muted-2); font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    .thresholds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .threshold { padding: 9px 10px; border-radius: 10px; background: rgba(255, 255, 255, .028); border: 1px solid rgba(255, 255, 255, .055); }
+    .threshold > span { display: flex; align-items: center; gap: 5px; font-size: 8.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
+    .threshold > span i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .threshold strong { display: block; margin-top: 4px; font-family: var(--mono); font-size: 11px; font-weight: 600; color: #c6e5d8; white-space: nowrap; }
+    .threshold.ok > span { color: #6ee7b7; }
+    .threshold.warn > span { color: #fcd34d; }
+    .threshold.danger > span { color: #fda4af; }
+    .card-hint { margin: 12px 0 0; color: var(--muted-2); font-size: 10.5px; line-height: 1.55; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .stat { padding: 18px; display: flex; flex-direction: column; min-height: 148px; overflow: hidden; transition: transform .25s ease, border-color .25s ease; }
+    .stat:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .16); }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .stat-icon {
+      width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+      color: var(--green); background: rgba(52, 211, 153, .09); border: 1px solid rgba(52, 211, 153, .18);
+    }
+    .stat-icon svg { width: 16px; height: 16px; }
+    .stat-tag { font-size: 8.5px; font-weight: 800; letter-spacing: .12em; color: var(--muted-2); }
+    .stat-value { display: flex; align-items: baseline; gap: 4px; margin-top: 12px; }
+    .stat-value strong { font-family: var(--mono); font-size: 26px; line-height: 1; letter-spacing: -.05em; font-weight: 650; }
+    .stat-value .unit { color: var(--muted-2); font-size: 10px; font-weight: 700; }
+    .stat-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; }
+    .stat-bottom span { color: var(--muted); font-size: 10.5px; font-weight: 600; }
+    .spark { width: 74px; height: 28px; opacity: .9; overflow: visible; }
+    .signal { display: flex; align-items: flex-end; gap: 3px; height: 20px; }
+    .signal i { display: block; width: 4px; border-radius: 2px; background: rgba(255, 255, 255, .12); }
+    .signal i:nth-child(1) { height: 5px; }
+    .signal i:nth-child(2) { height: 9px; }
+    .signal i:nth-child(3) { height: 13px; }
+    .signal i:nth-child(4) { height: 18px; }
+    .signal i.on { background: var(--green); box-shadow: 0 0 7px rgba(52, 211, 153, .45); }
+    .signal i.on.warn { background: var(--amber); box-shadow: 0 0 7px rgba(251, 191, 36, .4); }
+    .signal i.on.danger { background: var(--red); box-shadow: 0 0 7px rgba(251, 113, 133, .4); }
+    .device-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted-2); }
+    .device-dot.online { background: var(--green); box-shadow: 0 0 10px rgba(52, 211, 153, .7); animation: pulse 2s infinite; }
+    .device-dot.offline { background: var(--red); box-shadow: 0 0 10px rgba(251, 113, 133, .55); }
+    .device-dot.demo { background: var(--amber); box-shadow: 0 0 10px rgba(251, 191, 36, .55); }
+    .mini-meta { color: var(--muted-2); font-size: 9.5px; text-align: right; line-height: 1.4; }
+
+    /* ---------- chart ---------- */
+    .card-section { margin-top: 18px; padding: 24px; }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .chart-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .tabs, .ranges { display: inline-flex; padding: 3px; border-radius: 11px; background: rgba(0, 0, 0, .22); border: 1px solid var(--line); }
+    .tab, .range {
+      border: 0; background: transparent; color: var(--muted-2);
+      padding: 7px 10px; border-radius: 8px; font-size: 10px; font-weight: 750; letter-spacing: .04em;
+      transition: .2s ease;
+    }
+    .tab:hover, .range:hover { color: var(--text); }
+    .tab.active, .range.active { color: #052e22; background: linear-gradient(135deg, #a3e635, #34d399); box-shadow: 0 4px 14px rgba(52, 211, 153, .22); }
+    .chart-wrap { position: relative; height: 330px; margin-top: 18px; }
+    .chart-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted-2); font-size: 12px; text-align: center; padding: 20px; }
+    .chart-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .chart-stats { display: flex; gap: 18px; flex-wrap: wrap; }
+    .chart-stat { display: flex; align-items: baseline; gap: 6px; }
+    .chart-stat span { color: var(--muted-2); font-size: 9.5px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .chart-stat strong { font-family: var(--mono); font-size: 12px; font-weight: 600; color: #c6e5d8; }
+    .source-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 8px; font-size: 8.5px; font-weight: 800; letter-spacing: .11em; color: var(--muted); background: rgba(255, 255, 255, .035); border: 1px solid var(--line); }
+    .source-badge.demo { color: #fcd34d; border-color: rgba(251, 191, 36, .25); background: rgba(251, 191, 36, .07); }
+    .source-badge.live { color: #6ee7b7; border-color: rgba(52, 211, 153, .25); background: rgba(52, 211, 153, .07); }
+    .source-badge.sheets { color: #67e8f9; border-color: rgba(34, 211, 238, .25); background: rgba(34, 211, 238, .07); }
+
+    /* ---------- table ---------- */
+    .table-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .table-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    thead th { padding: 0 10px 10px; text-align: left; font-size: 8.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: var(--muted-2); border-bottom: 1px solid var(--line); }
+    tbody td { padding: 12px 10px; font-size: 11.5px; color: #c6e5d8; border-bottom: 1px solid rgba(255, 255, 255, .045); white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody td.mono { font-family: var(--mono); font-size: 11px; }
+    tbody td.muted { color: var(--muted-2); }
+    .row-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; font-size: 8.5px; font-weight: 800; letter-spacing: .1em; border: 1px solid; }
+    .row-status::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+    .row-status.ok { color: #6ee7b7; background: rgba(52, 211, 153, .08); border-color: rgba(52, 211, 153, .22); }
+    .row-status.warn { color: #fcd34d; background: rgba(251, 191, 36, .08); border-color: rgba(251, 191, 36, .24); }
+    .row-status.danger { color: #fda4af; background: rgba(251, 113, 133, .08); border-color: rgba(251, 113, 133, .24); }
+    .row-status.warmup { color: #67e8f9; background: rgba(34, 211, 238, .08); border-color: rgba(34, 211, 238, .24); }
+    .empty-row td { padding: 28px 10px; text-align: center; color: var(--muted-2); font-size: 11px; }
+    .table-hint { display: none; margin: 10px 0 0; color: var(--muted-2); font-size: 9.5px; }
+
+    /* ---------- notes ---------- */
+    .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+    .note { padding: 20px; border-radius: 18px; background: rgba(255, 255, 255, .028); border: 1px solid var(--line); }
+    .note .num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; font-family: var(--mono); font-size: 10px; font-weight: 700; color: #6ee7b7; background: rgba(52, 211, 153, .09); border: 1px solid rgba(52, 211, 153, .2); }
+    .note h3 { margin: 12px 0 6px; font-size: 12.5px; font-weight: 700; }
+    .note p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .note.alert { border-color: rgba(251, 191, 36, .22); background: rgba(251, 191, 36, .045); }
+    .note.alert .num { color: #fcd34d; background: rgba(251, 191, 36, .09); border-color: rgba(251, 191, 36, .24); }
+
+    /* ---------- footer ---------- */
+    footer { margin-top: 42px; padding: 26px 0 30px; border-top: 1px solid rgba(255, 255, 255, .06); }
+    .footer-inner { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .footer-brand strong { font-size: 12px; letter-spacing: .12em; }
+    .footer-brand p { margin: 7px 0 0; max-width: 62ch; color: var(--muted-2); font-size: 10.5px; line-height: 1.6; }
+    .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); font-size: 10.5px; font-weight: 600; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-note { margin: 18px 0 0; color: #4d6b5f; font-size: 9.5px; letter-spacing: .04em; }
+
+    /* ---------- buttons ---------- */
+    .btn { border: 1px solid var(--line-2); background: rgba(255, 255, 255, .05); color: var(--text); padding: 10px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; transition: .2s ease; }
+    .btn:hover { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .22); }
+    .btn.small { padding: 7px 10px; font-size: 10px; }
+    .btn.ghost { background: transparent; }
+    .btn.primary-btn { background: linear-gradient(135deg, #a3e635, #34d399); color: #052e22; border-color: transparent; }
+    .btn.primary-btn:hover { filter: brightness(1.06); }
+    .btn.danger-text { color: #fda4af; }
+    .btn:disabled { opacity: .55; cursor: wait; }
+
+    /* ---------- modal ---------- */
+    .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 18px; background: rgba(1, 10, 7, .74); backdrop-filter: blur(10px); }
+    .modal-panel { width: min(580px, 100%); max-height: 92vh; overflow-y: auto; padding: 26px; border-radius: 24px; background: #071f17; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 30px 100px rgba(0, 0, 0, .55); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .modal-head h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+    .modal-head p { margin: 6px 0 0; color: var(--muted-2); font-size: 10.5px; line-height: 1.5; }
+    fieldset { border: 0; padding: 0; margin: 0 0 18px; }
+    legend { padding: 0; margin-bottom: 9px; font-size: 9.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #6ee7b7; }
+    label { display: block; margin-bottom: 10px; color: var(--muted); font-size: 10.5px; font-weight: 600; }
+    input[type="text"], input[type="password"], input[type="url"], input[type="number"] {
+      width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--line-2); background: rgba(0, 0, 0, .28); color: var(--text);
+      outline: none; font-size: 11.5px; transition: .2s ease;
+    }
+    input:focus { border-color: rgba(52, 211, 153, .55); box-shadow: 0 0 0 3px rgba(52, 211, 153, .1); }
+    .input-row { display: flex; gap: 8px; align-items: center; }
+    .input-row input { flex: 1; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .test-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .test-msg { font-size: 10px; line-height: 1.4; color: var(--muted-2); }
+    .test-msg.ok { color: #6ee7b7; }
+    .test-msg.err { color: #fda4af; }
+    .field-note { margin: 8px 0 0; color: #4d6b5f; font-size: 9.5px; line-height: 1.5; }
+    .check { display: flex; align-items: center; gap: 9px; color: #c6e5d8; font-size: 11px; font-weight: 600; margin: 4px 0 18px; }
+    .check input { width: 15px; height: 15px; accent-color: #34d399; }
+    .modal-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line); }
+    .modal-actions .spacer { flex: 1; }
+
+    /* ---------- toast ---------- */
+    .toast {
+      position: fixed; left: 50%; bottom: 26px; z-index: 120;
+      transform: translate(-50%, 18px); opacity: 0; pointer-events: none;
+      padding: 11px 16px; border-radius: 11px;
+      background: #0b2e23; border: 1px solid rgba(52, 211, 153, .3);
+      color: #d1fae5; font-size: 11px; font-weight: 600;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .42);
+      transition: .25s ease;
+      max-width: calc(100vw - 32px);
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .toast.err { border-color: rgba(251, 113, 133, .35); color: #ffe4e6; }
+
+    @media (max-width: 1020px) {
+      .hero { grid-template-columns: 1fr; padding-top: 34px; }
+      .hero-art { order: 0; }
+      .hero-art img { width: min(320px, 78%); }
+      .art-badge { left: 50%; transform: translateX(-50%); bottom: 0; }
+      .hero h1 { max-width: 18ch; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(4, 1fr); }
+      .notes { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 32px, 1240px); }
+      .nav { display: none; }
+      .topbar-inner { gap: 10px; }
+      .brand-text small { display: none; }
+      .connection-pill { padding: 7px 9px; font-size: 9px; letter-spacing: .06em; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .chart-wrap { height: 280px; }
+      .hero-art img { width: min(280px, 72%); }
+      .hero p.lead { font-size: 13px; }
+      .gauge-wrap { width: min(220px, 68%); }
+      .primary { padding: 20px; }
+      .card-section { padding: 20px; }
+      .chart-controls { width: 100%; justify-content: space-between; }
+      .tabs, .ranges { flex: 1; justify-content: center; }
+      .tab, .range { flex: 1; padding: 7px 6px; }
+      .table-hint { display: block; }
+    }
+    @media (max-width: 460px) {
+      .hero h1 { font-size: 2.35rem; }
+      .stat-grid { gap: 10px; }
+      .stat { min-height: 136px; padding: 14px; }
+      .stat-value strong { font-size: 22px; }
+      .spark { width: 52px; }
+      .thresholds { gap: 5px; }
+      .threshold { padding: 7px; }
+      .threshold strong { font-size: 9.5px; }
+      .two-col { grid-template-columns: 1fr; }
+      .modal-panel { padding: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top" aria-label="Smart Biogas Digester">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M20 4C11.2 4 6 8.1 6 14c0 3.3 2.7 6 6 6 6.9 0 8-9.2 8-16Z" fill="#34d399" fill-opacity=".9"/>
+            <path d="M4 21c1.8-5.2 5-8.7 10-11" stroke="#a3e635" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>SMART BIOGAS</strong>
+          <small>DIGESTER · KELOMPOK 6</small>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Navigasi utama">
+        <a href="#monitor">Monitor</a>
+        <a href="#riwayat">Riwayat</a>
+        <a href="#batasan">Batasan</a>
+        <a href="README.md" target="_blank" rel="noopener">Dokumentasi</a>
+      </nav>
+
+      <div class="top-actions">
+        <span class="connection-pill" id="connPill" aria-live="polite"><i></i><span>Menghubungkan…</span></span>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Buka pengaturan" title="Pengaturan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.7 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.7h.03a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.1 4.7a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.3 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Internet of Things · Semester 5</p>
+        <h1>Napas digester, <span>terbaca dari jauh.</span></h1>
+        <p class="lead">
+          Pantau kadar metana, suhu, dan kelembapan digester biogas secara real-time.
+          Data mengalir dari ESP32 ke Blynk, lalu tersimpan otomatis di Google Sheets.
+        </p>
+        <div class="chips" aria-label="Teknologi yang digunakan">
+          <span class="chip"><span class="chip-dot"></span><b>ESP32</b> · WiFi</span>
+          <span class="chip"><b>MQ-4</b> · CH₄</span>
+          <span class="chip"><b>DHT22</b> · Suhu &amp; RH</span>
+          <span class="chip"><b>Blynk</b> + Sheets</span>
+        </div>
+      </div>
+      <div class="hero-art">
+        <img src="assets/ilustrasi-digester.svg" alt="Ilustrasi digester biogas dengan kotak sensor ESP32, pipa gas, dan chip data metana, suhu, serta kelembapan." width="640" height="640">
+        <span class="art-badge"><i></i> Data mengalir ke Blynk</span>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Ringkasan monitoring">
+      <article class="card primary" id="monitor">
+        <div class="card-head">
+          <div>
+            <p class="card-label">Kadar metana</p>
+            <h2>CH<sub>4</sub> <span>di dalam digester</span></h2>
+          </div>
+          <span class="status-pill idle" id="statusPill">MENUNGGU</span>
+        </div>
+
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 240 240" aria-hidden="true">
+            <circle class="gauge-track" cx="120" cy="120" r="92"></circle>
+            <circle class="gauge-value" id="gaugeValue" cx="120" cy="120" r="92"></circle>
+          </svg>
+          <div class="gauge-center">
+            <strong id="ch4Value">—</strong>
+            <span>ppm</span>
+          </div>
+        </div>
+
+        <div class="thresholds" aria-label="Ambang batas">
+          <div class="threshold ok"><span><i></i>Aman</span><strong>&lt; <span id="warnLabel">1.000</span></strong></div>
+          <div class="threshold warn"><span><i></i>Waspada</span><strong><span id="warnLabel2">1.000</span>–<span id="dangerLabel">5.000</span></strong></div>
+          <div class="threshold danger"><span><i></i>Bahaya</span><strong>≥ <span id="dangerLabel2">5.000</span></strong></div>
+        </div>
+        <p class="card-hint" id="ch4Hint">Menunggu data pertama dari perangkat.</p>
+      </article>
+
+      <div class="stat-grid">
+        <article class="card stat">
+          <div class="stat-top">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <path d="M12 3s5.5 5.6 5.5 10a5.5 5.5 0 1 1-11 0C6.5 8.6 12 3 12 3Z"/>
+              </svg>
+            </span>
+            <span class="stat-tag">DHT22</span>
+          </div>
+          <div class="stat-value"><strong id="humValue">—</strong><span class="unit">%RH</span></div>
+          <div class="stat-bottom">
+            <span>Kelembapan</span>
+            <svg class="spark" id="humSpark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </article>
+
+        <article class="card stat">
+          <div class="stat-top">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0Z"/>
+                <path d="M12 9v6"/>
+              </svg>
+            </span>
+            <span class="stat-tag">DHT22</span>
+          </div>
+          <div class="stat-value"><strong id="tempValue">—</strong><span class="unit">°C</span></div>
+          <div class="stat-bottom">
+            <span>Suhu</span>
+            <svg class="spark" id="tempSpark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </article>
+
+        <article class="card stat">
+          <div class="stat-top">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <path d="M4.5 9.5a15 15 0 0 1 15 0"/>
+                <path d="M7.5 13a10 10 0 0 1 9 0"/>
+                <path d="M10.5 16.4a5 5 0 0 1 3 0"/>
+                <circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            <span class="stat-tag">ESP32</span>
+          </div>
+          <div class="stat-value"><strong id="rssiValue">—</strong><span class="unit">dBm</span></div>
+          <div class="stat-bottom">
+            <span>Sinyal WiFi</span>
+            <span class="signal" id="signalBars" aria-label="Kekuatan sinyal"><i></i><i></i><i></i><i></i></span>
+          </div>
+        </article>
+
+        <article class="card stat">
+          <div class="stat-top">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <rect x="4" y="4" width="16" height="16" rx="4"/>
+                <path d="M9 9h6v6H9z"/>
+                <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+              </svg>
+            </span>
+            <span class="stat-tag">STATUS</span>
+          </div>
+          <div class="stat-value"><strong id="deviceValue" style="font-size:18px;letter-spacing:-.02em">—</strong></div>
+          <div class="stat-bottom">
+            <span>Perangkat</span>
+            <span class="device-dot" id="deviceDot" aria-hidden="true"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="card card-section" aria-labelledby="chartTitle">
+      <div class="section-head">
+        <div>
+          <p class="card-label">Riwayat pengukuran</p>
+          <h2 id="chartTitle">Tren pembacaan</h2>
+        </div>
+        <div class="chart-controls">
+          <div class="tabs" role="tablist" aria-label="Pilih metrik grafik">
+            <button class="tab active" type="button" data-metric="ppm" role="tab" aria-selected="true">CH₄</button>
+            <button class="tab" type="button" data-metric="hum" role="tab" aria-selected="false">Kelembapan</button>
+            <button class="tab" type="button" data-metric="temp" role="tab" aria-selected="false">Suhu</button>
+          </div>
+          <div class="ranges" role="group" aria-label="Pilih rentang waktu">
+            <button class="range" type="button" data-range="1">1J</button>
+            <button class="range" type="button" data-range="6">6J</button>
+            <button class="range active" type="button" data-range="24">24J</button>
+            <button class="range" type="button" data-range="168">7H</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="trendChart" role="img" aria-label="Grafik tren kadar metana, kelembapan, dan suhu"></canvas>
+        <div class="chart-empty" id="chartEmpty" hidden>Belum ada data untuk rentang ini.</div>
+      </div>
+
+      <div class="chart-foot">
+        <div class="chart-stats" id="chartStats"></div>
+        <span class="source-badge" id="sourceBadge">DEMO</span>
+      </div>
+    </section>
+
+    <section class="card card-section" id="riwayat" aria-labelledby="historyTitle">
+      <div class="table-head">
+        <div>
+          <p class="card-label">Log terakhir</p>
+          <h2 id="historyTitle">Riwayat pengukuran</h2>
+        </div>
+        <button class="btn small" type="button" id="csvBtn">
+          <span aria-hidden="true">↓</span> Unduh CSV
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>CH₄ (ppm)</th>
+              <th>RH (%)</th>
+              <th>Suhu (°C)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <p class="table-hint">Geser tabel ke samping untuk melihat kolom kelembapan, suhu, dan status.</p>
+    </section>
+
+    <section class="notes" id="batasan" aria-label="Catatan penting">
+      <article class="note">
+        <span class="num">01</span>
+        <h3>MQ-4 tidak selektif</h3>
+        <p>Sensor ini bereaksi terhadap berbagai gas mudah terbakar, bukan hanya metana. Angka ppm adalah estimasi, bukan hasil laboratorium.</p>
+      </article>
+      <article class="note">
+        <span class="num">02</span>
+        <h3>Ambang batas</h3>
+        <p>1.000 ppm dipakai sebagai peringatan dini, 5.000 ppm mendekati 10% LEL metana. Nilainya bisa diubah di Pengaturan.</p>
+      </article>
+      <article class="note alert">
+        <span class="num">!</span>
+        <h3>Bukan alat keselamatan</h3>
+        <p>Jangan gunakan dashboard ini sebagai satu-satunya pengaman. Untuk aplikasi nyata, pakai sensor bersertifikat dan ventilasi yang baik.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <strong>SMART BIOGAS DIGESTER</strong>
+          <p>Kelompok 6 · Andriyan Susetyo · Alwi Sofyan Afandi · Nisa Aulia Ramadhani · Guritno Wulandoro Suryosaputro</p>
+        </div>
+        <div class="footer-links">
+          <a href="README.md" target="_blank" rel="noopener">Dokumentasi</a>
+          <a href="docs/Panduan_Smart_Biogas_Digester.pdf" target="_blank" rel="noopener">Panduan PDF</a>
+          <a href="docs/Presentasi_Smart_Biogas_Digester.pptx" target="_blank" rel="noopener">Slide presentasi</a>
+        </div>
+      </div>
+      <p class="footer-note">Internet of Things · 2026 · Dashboard ini bukan alat keselamatan kerja.</p>
+    </div>
+  </footer>
+
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="settingsTitle">Pengaturan dashboard</h2>
+          <p>Hubungkan ke Blynk dan Google Sheets. Nilai disimpan hanya di browser ini.</p>
+        </div>
+        <button class="icon-btn" type="button" id="closeSettings" aria-label="Tutup pengaturan">✕</button>
+      </div>
+
+      <form id="settingsForm">
+        <fieldset>
+          <legend>Koneksi Blynk</legend>
+          <label>Auth token
+            <div class="input-row">
+              <input type="password" id="tokenInput" autocomplete="off" placeholder="Token dari Blynk Console">
+              <button type="button" class="btn small ghost" id="toggleToken">Lihat</button>
+            </div>
+          </label>
+          <div class="test-row">
+            <button type="button" class="btn small" id="testBlynk">Uji Blynk</button>
+            <span class="test-msg" id="blynkTest"></span>
+          </div>
+          <p class="field-note">Token tidak pernah ditulis ke file project. Jangan pakai token ini di komputer bersama.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Riwayat Google Sheets</legend>
+          <label>URL Web App
+            <input type="url" id="sheetsInput" placeholder="https://script.google.com/macros/s/.../exec">
+          </label>
+          <div class="test-row">
+            <button type="button" class="btn small" id="testSheets">Uji Sheets</button>
+            <span class="test-msg" id="sheetsTest"></span>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Ambang peringatan</legend>
+          <div class="two-col">
+            <label>Waspada (ppm)
+              <input type="number" id="warnInput" min="0" step="50" value="1000">
+            </label>
+            <label>Bahaya (ppm)
+              <input type="number" id="dangerInput" min="0" step="100" value="5000">
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="check"><input type="checkbox" id="demoInput"> Mode demo (tanpa koneksi Blynk)</label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn ghost danger-text" id="resetData">Hapus data lokal</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn ghost" id="cancelSettings">Batal</button>
+          <button type="submit" class="btn primary-btn">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const LS = {
+        settings: 'sb_settings_v1',
+        liveHistory: 'sb_history_live_v1',
+        demoHistory: 'sb_history_demo_v1'
+      };
+
+      const state = {
+        token: '',
+        sheets: '',
+        warn: 1000,
+        danger: 5000,
+        demo: true,
+        metric: 'ppm',
+        range: 24,
+        live: { ppm: null, hum: null, temp: null, rssi: null, status: null },
+        history: [],
+        online: false,
+        source: 'demo',
+        lastSeen: null,
+        failures: 0,
+        sheetsOk: false,
+        chart: null,
+        chartPoints: [],
+        timers: []
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const numFmt = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+      const decFmt = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const timeFmt = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const dateTimeFmt = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const shortDateFmt = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short' });
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function readJSON(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (err) {
+          return fallback;
+        }
+      }
+
+      function writeJSON(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (err) {
+          console.warn('localStorage penuh atau diblokir', err);
+        }
+      }
+
+      function loadSettings() {
+        const saved = readJSON(LS.settings, null);
+        if (saved) {
+          state.token = saved.token || '';
+          state.sheets = saved.sheets || '';
+          state.warn = Number(saved.warn) || 1000;
+          state.danger = Number(saved.danger) || 5000;
+          state.demo = saved.demo !== undefined ? !!saved.demo : !state.token;
+        } else {
+          state.demo = true;
+        }
+      }
+
+      function saveSettings() {
+        writeJSON(LS.settings, {
+          token: state.token,
+          sheets: state.sheets,
+          warn: state.warn,
+          danger: state.danger,
+          demo: state.demo
+        });
+      }
+
+      function historyKey() {
+        return state.demo ? LS.demoHistory : LS.liveHistory;
+      }
+
+      function persistHistory() {
+        writeJSON(historyKey(), state.history.slice(-3000));
+      }
+
+      function loadHistory() {
+        state.history = readJSON(historyKey(), []);
+        if (!Array.isArray(state.history)) state.history = [];
+      }
+
+      function statusMeta(status) {
+        const value = String(status || '').toUpperCase();
+        if (value.indexOf('BAHAYA') !== -1) return { label: 'BAHAYA', cls: 'danger' };
+        if (value.indexOf('WASPADA') !== -1) return { label: 'WASPADA', cls: 'warn' };
+        if (value.indexOf('WARMUP') !== -1) return { label: 'WARMUP', cls: 'warmup' };
+        if (value.indexOf('AMAN') !== -1) return { label: 'AMAN', cls: 'ok' };
+        return { label: 'MENUNGGU', cls: 'idle' };
+      }
+
+      function deriveStatus(ppm) {
+        if (ppm === null || ppm === undefined || Number.isNaN(Number(ppm))) return 'MENUNGGU';
+        const value = Number(ppm);
+        if (value >= state.danger) return 'BAHAYA';
+        if (value >= state.warn) return 'WASPADA';
+        return 'AMAN';
+      }
+
+      function formatPpm(value) {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+        return numFmt.format(Number(value));
+      }
+
+      function formatDecimal(value, suffix) {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+        return decFmt.format(Number(value)) + (suffix || '');
+      }
+
+      function formatClock(value) {
+        return timeFmt.format(new Date(value)).replace('.', ':');
+      }
+
+      function formatDate(value) {
+        return dateTimeFmt.format(new Date(value)).replace('.', ':');
+      }
+
+      function formatChartTime(value) {
+        if (state.range <= 24) return timeFmt.format(new Date(value)).replace('.', ':');
+        return shortDateFmt.format(new Date(value));
+      }
+
+      function relativeTime(value) {
+        if (!value) return 'belum ada data';
+        const diff = Math.max(0, Math.floor((Date.now() - value) / 1000));
+        if (diff < 5) return 'baru saja';
+        if (diff < 60) return diff + ' detik lalu';
+        if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+        return Math.floor(diff / 86400) + ' hari lalu';
+      }
+
+      function statusClass(status) {
+        return statusMeta(status).cls;
+      }
+
+      function updateConnection() {
+        const pill = $('connPill');
+        pill.classList.remove('live', 'demo', 'offline');
+        let text = 'Menghubungkan…';
+
+        if (state.demo) {
+          pill.classList.add('demo');
+          text = 'Mode demo';
+        } else if (state.online) {
+          pill.classList.add('live');
+          text = 'Blynk live';
+        } else {
+          pill.classList.add('offline');
+          text = 'Offline';
+        }
+
+        pill.querySelector('span').textContent = text;
+        $('connPill').setAttribute('aria-label', 'Status koneksi: ' + text);
+      }
+
+      function updatePrimary() {
+        const meta = statusMeta(state.live.status);
+        const pill = $('statusPill');
+        pill.className = 'status-pill ' + meta.cls;
+        pill.textContent = meta.label;
+
+        const ppm = state.live.ppm;
+        $('ch4Value').textContent = formatPpm(ppm);
+
+        const pct = ppm === null || ppm === undefined ? 0 : clamp(Number(ppm) / Math.max(1, state.danger), 0, 1);
+        const ring = $('gaugeValue');
+        const circumference = 2 * Math.PI * 92;
+        ring.style.strokeDasharray = circumference;
+        ring.style.strokeDashoffset = String(circumference * (1 - pct));
+
+        let color = '#34d399';
+        if (meta.cls === 'warn') color = '#fbbf24';
+        if (meta.cls === 'danger') color = '#fb7185';
+        if (meta.cls === 'warmup' || meta.cls === 'idle') color = '#22d3ee';
+        ring.style.stroke = color;
+        ring.style.filter = 'drop-shadow(0 0 9px ' + color + '77)';
+
+        $('warnLabel').textContent = numFmt.format(state.warn);
+        $('warnLabel2').textContent = numFmt.format(state.warn);
+        $('dangerLabel').textContent = numFmt.format(state.danger);
+        $('dangerLabel2').textContent = numFmt.format(state.danger);
+
+        let hint = 'Ambang peringatan bisa diubah lewat tombol pengaturan.';
+        if (state.live.status === 'WARMUP') {
+          hint = 'Sensor MQ-4 sedang stabilisasi. Status berubah otomatis setelah warm-up 3 menit.';
+        } else if (ppm === null || ppm === undefined) {
+          hint = 'Datastream V2 (CH₄ ppm) belum dikirim. Pastikan firmware versi terbaru sudah di-upload.';
+        } else if (!state.demo && !state.online) {
+          hint = 'Perangkat sedang offline. Menampilkan data terakhir ' + relativeTime(state.lastSeen) + '.';
+        } else if (meta.cls === 'warn') {
+          hint = 'Kadar metana melewati ambang waspada. Periksa sambungan pipa dan ventilasi.';
+        } else if (meta.cls === 'danger') {
+          hint = 'Kadar metana tinggi. Jauhkan sumber api dan buka ventilasi segera.';
+        } else if (meta.cls === 'ok') {
+          hint = 'Kadar metana di bawah ambang waspada. Tetap pantau tren secara berkala.';
+        }
+        $('ch4Hint').textContent = hint;
+      }
+
+      function buildSpark(el, values, color) {
+        if (!el) return;
+        if (!values || values.length < 2) {
+          el.innerHTML = '';
+          return;
+        }
+        const min = Math.min.apply(null, values);
+        const max = Math.max.apply(null, values);
+        const span = max - min || 1;
+        const points = values.map(function (value, index) {
+          const x = (index / (values.length - 1)) * 100;
+          const y = 29 - ((value - min) / span) * 24;
+          return x.toFixed(1) + ',' + y.toFixed(1);
+        }).join(' ');
+        el.innerHTML = '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" opacity=".85"></polyline>';
+      }
+
+      function recentValues(key, count) {
+        return state.history.slice(-count).map(function (point) { return Number(point[key]); }).filter(function (value) { return Number.isFinite(value); });
+      }
+
+      function signalLevel(rssi) {
+        if (rssi === null || rssi === undefined) return 0;
+        if (rssi >= -55) return 4;
+        if (rssi >= -65) return 3;
+        if (rssi >= -75) return 2;
+        return 1;
+      }
+
+      function updateStats() {
+        $('humValue').textContent = formatDecimal(state.live.hum);
+        $('tempValue').textContent = formatDecimal(state.live.temp);
+        $('rssiValue').textContent = state.live.rssi === null || state.live.rssi === undefined ? '—' : Math.round(state.live.rssi);
+
+        const level = signalLevel(state.live.rssi);
+        const bars = $('signalBars').querySelectorAll('i');
+        bars.forEach(function (bar, index) {
+          bar.classList.toggle('on', index < level);
+          bar.classList.toggle('warn', level <= 2 && index < level);
+          bar.classList.toggle('danger', level === 1 && index < level);
+        });
+
+        let deviceText = 'Menunggu';
+        let dotClass = '';
+        if (state.demo) {
+          deviceText = 'Demo';
+          dotClass = 'demo';
+        } else if (state.online) {
+          deviceText = 'Online';
+          dotClass = 'online';
+        } else {
+          deviceText = 'Offline';
+          dotClass = 'offline';
+        }
+        $('deviceValue').textContent = deviceText;
+        $('deviceDot').className = 'device-dot ' + dotClass;
+        $('deviceValue').style.color = dotClass === 'online' ? '#6ee7b7' : dotClass === 'demo' ? '#fcd34d' : dotClass === 'offline' ? '#fda4af' : 'var(--text)';
+
+        buildSpark($('humSpark'), recentValues('hum', 28), '#22d3ee');
+        buildSpark($('tempSpark'), recentValues('temp', 28), '#fb923c');
+      }
+
+      function updateSource() {
+        const badge = $('sourceBadge');
+        badge.className = 'source-badge';
+        if (state.demo) {
+          badge.classList.add('demo');
+          badge.textContent = 'DEMO';
+        } else if (state.sheetsOk) {
+          badge.classList.add('sheets');
+          badge.textContent = 'BLYNK + SHEETS';
+        } else {
+          badge.classList.add('live');
+          badge.textContent = 'BLYNK LIVE';
+        }
+      }
+
+      function updateTable() {
+        const body = $('historyBody');
+        body.innerHTML = '';
+
+        if (!state.history.length) {
+          const row = document.createElement('tr');
+          row.className = 'empty-row';
+          const cell = document.createElement('td');
+          cell.colSpan = 5;
+          cell.textContent = 'Belum ada data. Isi token Blynk di Pengaturan atau tunggu log berikutnya.';
+          row.appendChild(cell);
+          body.appendChild(row);
+          return;
+        }
+
+        state.history.slice(-8).reverse().forEach(function (point) {
+          const row = document.createElement('tr');
+          const meta = statusMeta(point.status);
+
+          const time = document.createElement('td');
+          time.className = 'muted';
+          time.textContent = formatDate(point.ts);
+
+          const ppm = document.createElement('td');
+          ppm.className = 'mono';
+          ppm.textContent = formatPpm(point.ppm);
+
+          const hum = document.createElement('td');
+          hum.className = 'mono';
+          hum.textContent = formatDecimal(point.hum);
+
+          const temp = document.createElement('td');
+          temp.className = 'mono';
+          temp.textContent = formatDecimal(point.temp);
+
+          const status = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = 'row-status ' + meta.cls;
+          badge.textContent = meta.label;
+          status.appendChild(badge);
+
+          row.appendChild(time);
+          row.appendChild(ppm);
+          row.appendChild(hum);
+          row.appendChild(temp);
+          row.appendChild(status);
+          body.appendChild(row);
+        });
+      }
+
+      function rangePoints() {
+        const cutoff = Date.now() - state.range * 3600 * 1000;
+        let points = state.history.filter(function (point) { return point.ts >= cutoff; });
+        if (points.length > 650) {
+          const step = Math.ceil(points.length / 650);
+          points = points.filter(function (_, index) { return index % step === 0 || index === points.length - 1; });
+        }
+        return points;
+      }
+
+      function metricConfig() {
+        if (state.metric === 'hum') {
+          return { key: 'hum', label: 'Kelembapan', unit: '%', color: '#22d3ee' };
+        }
+        if (state.metric === 'temp') {
+          return { key: 'temp', label: 'Suhu', unit: '°C', color: '#fb923c' };
+        }
+        return { key: 'ppm', label: 'CH₄', unit: 'ppm', color: '#34d399' };
+      }
+
+      function updateChartStats(points, config) {
+        if (!points.length) {
+          $('chartStats').innerHTML = '';
+          return;
+        }
+        const values = points.map(function (point) { return Number(point[config.key]); }).filter(function (value) { return Number.isFinite(value); });
+        if (!values.length) {
+          $('chartStats').innerHTML = '';
+          return;
+        }
+        const min = Math.min.apply(null, values);
+        const max = Math.max.apply(null, values);
+        const avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+        const decimals = config.key === 'ppm' ? 0 : 1;
+        const fmt = new Intl.NumberFormat('id-ID', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+        $('chartStats').innerHTML =
+          '<span class="chart-stat"><span>Min</span><strong>' + fmt.format(min) + ' ' + config.unit + '</strong></span>' +
+          '<span class="chart-stat"><span>Rata-rata</span><strong>' + fmt.format(avg) + ' ' + config.unit + '</strong></span>' +
+          '<span class="chart-stat"><span>Maks</span><strong>' + fmt.format(max) + ' ' + config.unit + '</strong></span>';
+      }
+
+      const thresholdPlugin = {
+        id: 'thresholdLines',
+        afterDatasetsDraw: function (chart) {
+          if (state.metric !== 'ppm') return;
+          const ctx = chart.ctx;
+          const area = chart.chartArea;
+          const yScale = chart.scales.y;
+          if (!area || !yScale) return;
+
+          const lines = [
+            { value: state.warn, color: 'rgba(251, 191, 36, .55)', label: 'WASPADA' },
+            { value: state.danger, color: 'rgba(251, 113, 133, .6)', label: 'BAHAYA' }
+          ];
+
+          ctx.save();
+          lines.forEach(function (line) {
+            const y = yScale.getPixelForValue(line.value);
+            if (y < area.top || y > area.bottom) return;
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = line.color;
+            ctx.lineWidth = 1;
+            ctx.moveTo(area.left, y);
+            ctx.lineTo(area.right, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = line.color;
+            ctx.font = '600 9px "Segoe UI", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(line.label, area.right - 4, y - 5);
+          });
+          ctx.restore();
+        }
+      };
+
+      function createChart() {
+        if (typeof Chart === 'undefined') {
+          $('chartEmpty').hidden = false;
+          $('chartEmpty').textContent = 'Chart.js gagal dimuat. Buka halaman lewat server lokal atau periksa folder assets/vendor.';
+          return;
+        }
+
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.color = '#7f9c8f';
+
+        const ctx = $('trendChart').getContext('2d');
+        state.chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'CH₄',
+              data: [],
+              borderColor: '#34d399',
+              borderWidth: 2.2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              pointHoverBackgroundColor: '#a3e635',
+              pointHoverBorderColor: '#052e22',
+              pointHoverBorderWidth: 2,
+              fill: true,
+              tension: .35,
+              backgroundColor: function (context) {
+                const chart = context.chart;
+                const area = chart.chartArea;
+                if (!area) return 'rgba(52, 211, 153, .08)';
+                const gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                gradient.addColorStop(0, 'rgba(52, 211, 153, .30)');
+                gradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
+                return gradient;
+              }
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 550 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#071f17',
+                borderColor: 'rgba(52, 211, 153, .25)',
+                borderWidth: 1,
+                titleColor: '#ecfdf5',
+                bodyColor: '#b8d8ca',
+                padding: 11,
+                displayColors: false,
+                callbacks: {
+                  title: function (items) {
+                    if (!items.length) return '';
+                    const point = state.chartPoints[items[0].dataIndex];
+                    return point ? formatDate(point.ts) : '';
+                  },
+                  label: function (item) {
+                    const config = metricConfig();
+                    const value = item.parsed.y;
+                    return config.label + ': ' + (config.key === 'ppm' ? numFmt.format(value) : decFmt.format(value)) + ' ' + config.unit;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: 'rgba(255, 255, 255, .035)', drawTicks: false },
+                border: { display: false },
+                ticks: { color: '#648276', maxTicksLimit: window.innerWidth < 640 ? 4 : 7, maxRotation: 0, autoSkip: true, font: { size: 9.5 } }
+              },
+              y: {
+                beginAtZero: state.metric === 'ppm',
+                grid: { color: 'rgba(255, 255, 255, .05)', drawTicks: false },
+                border: { display: false },
+                ticks: { color: '#648276', maxTicksLimit: 6, font: { size: 9.5 }, padding: 8 }
+              }
+            }
+          },
+          plugins: [thresholdPlugin]
+        });
+      }
+
+      function updateChart() {
+        if (!state.chart) return;
+
+        const config = metricConfig();
+        const points = rangePoints();
+        state.chartPoints = points;
+
+        $('chartEmpty').hidden = points.length > 0;
+        state.chart.data.labels = points.map(function (point) {
+          return formatChartTime(point.ts);
+        });
+        state.chart.data.datasets[0].data = points.map(function (point) { return point[config.key]; });
+        state.chart.data.datasets[0].borderColor = config.color;
+        state.chart.data.datasets[0].backgroundColor = function (context) {
+          const chart = context.chart;
+          const area = chart.chartArea;
+          if (!area) return 'rgba(52, 211, 153, .08)';
+          const gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+          const rgb = config.color === '#22d3ee' ? '34, 211, 238' : config.color === '#fb923c' ? '251, 146, 60' : '52, 211, 153';
+          gradient.addColorStop(0, 'rgba(' + rgb + ', .30)');
+          gradient.addColorStop(1, 'rgba(' + rgb + ', 0)');
+          return gradient;
+        };
+        state.chart.options.scales.y.beginAtZero = state.metric === 'ppm';
+        state.chart.update('none');
+
+        updateChartStats(points, config);
+      }
+
+      function updateAll() {
+        updateConnection();
+        updatePrimary();
+        updateStats();
+        updateSource();
+        updateTable();
+        updateChart();
+      }
+
+      function addHistoryPoint() {
+        if (state.live.ppm === null || state.live.hum === null || state.live.temp === null) return;
+        const last = state.history[state.history.length - 1];
+        if (last && Date.now() - last.ts < 20000) return;
+
+        state.history.push({
+          ts: Date.now(),
+          ppm: Number(state.live.ppm),
+          hum: Number(state.live.hum),
+          temp: Number(state.live.temp),
+          rssi: state.live.rssi,
+          status: state.live.status || deriveStatus(state.live.ppm)
+        });
+
+        if (state.history.length > 3000) state.history = state.history.slice(-3000);
+        persistHistory();
+      }
+
+      function generateDemoHistory() {
+        const now = Date.now();
+        const points = [];
+        const total = 288;
+        const step = 5 * 60 * 1000;
+
+        for (let i = total - 1; i >= 0; i--) {
+          const ts = now - i * step;
+          const date = new Date(ts);
+          const hour = date.getHours() + date.getMinutes() / 60;
+          const wave = Math.sin(((hour - 6) / 24) * Math.PI * 2);
+          let ppm = 780 + wave * 150 + Math.sin(i / 6) * 42 + (Math.random() - .5) * 34;
+          if (i < 20) ppm += (20 - i) * 23;
+          ppm = clamp(ppm, 320, 2400);
+
+          const hum = clamp(86 + Math.sin(i / 9) * 3.2 + (Math.random() - .5) * 1.2, 68, 98);
+          const temp = clamp(34.8 + Math.sin(((hour - 8) / 24) * Math.PI * 2) * 1.7 + (Math.random() - .5) * .35, 29, 39.5);
+          points.push({
+            ts: ts,
+            ppm: ppm,
+            hum: hum,
+            temp: temp,
+            rssi: Math.round(-53 + (Math.random() - .5) * 7),
+            status: deriveStatus(ppm)
+          });
+        }
+
+        const latest = points[points.length - 1];
+        latest.ppm = 1180;
+        latest.hum = 88.2;
+        latest.temp = 36.2;
+        latest.rssi = -54;
+        latest.status = deriveStatus(latest.ppm);
+        points[points.length - 2].ppm = 1105;
+        points[points.length - 2].status = deriveStatus(1105);
+        points[points.length - 3].ppm = 1020;
+        points[points.length - 3].status = deriveStatus(1020);
+
+        return points;
+      }
+
+      function applyLatest(point) {
+        state.live.ppm = point.ppm;
+        state.live.hum = point.hum;
+        state.live.temp = point.temp;
+        state.live.rssi = point.rssi;
+        state.live.status = point.status || deriveStatus(point.ppm);
+        state.lastSeen = point.ts;
+      }
+
+      function startDemo() {
+        clearTimers();
+        state.demo = true;
+        state.online = true;
+        state.source = 'demo';
+        state.sheetsOk = false;
+        state.history = generateDemoHistory();
+        applyLatest(state.history[state.history.length - 1]);
+        persistHistory();
+        updateAll();
+        state.timers.push(setInterval(demoTick, 5000));
+      }
+
+      function demoPpm(previous) {
+        return clamp(previous + (Math.random() - .42) * 55, 980, 1420);
+      }
+
+      function demoTick() {
+        const last = state.history[state.history.length - 1];
+        if (!last) return;
+        const ppm = demoPpm(last.ppm);
+        const point = {
+          ts: Date.now(),
+          ppm: ppm,
+          hum: clamp(last.hum + (Math.random() - .5) * .7, 80, 96),
+          temp: clamp(last.temp + (Math.random() - .5) * .3, 33, 39),
+          rssi: Math.round(clamp(last.rssi + (Math.random() - .5) * 5, -78, -42)),
+          status: deriveStatus(ppm)
+        };
+        state.history.push(point);
+        if (state.history.length > 3000) state.history = state.history.slice(-3000);
+        applyLatest(point);
+        persistHistory();
+        updateAll();
+      }
+
+      function blynkUrl(path) {
+        return 'https://blynk.cloud/external/api/' + path + '?token=' + encodeURIComponent(state.token);
+      }
+
+      async function fetchLive() {
+        if (!state.token || state.demo) return;
+        try {
+          const response = await fetch(blynkUrl('getAll'), { cache: 'no-store' });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const data = await response.json();
+          const values = {};
+          Object.keys(data).forEach(function (key) { values[key.toUpperCase()] = data[key]; });
+
+          if (values.V1 !== undefined && values.V1 !== null) state.live.hum = Number(values.V1);
+          if (values.V2 !== undefined && values.V2 !== null) state.live.ppm = Number(values.V2);
+          if (values.V3 !== undefined && values.V3 !== null) state.live.temp = Number(values.V3);
+          if (values.V4 !== undefined && values.V4 !== null) state.live.rssi = Number(values.V4);
+          state.live.status = statusMeta(values.V0).cls === 'idle' ? deriveStatus(state.live.ppm) : String(values.V0);
+
+          state.source = 'blynk';
+          state.lastSeen = Date.now();
+          state.failures = 0;
+
+          addHistoryPoint();
+          updateAll();
+        } catch (err) {
+          state.failures++;
+          if (state.failures >= 2) state.online = false;
+          updateConnection();
+          updatePrimary();
+          console.warn('[Blynk] gagal mengambil data:', err.message);
+        }
+      }
+
+      async function checkHardware() {
+        if (!state.token || state.demo) return;
+        try {
+          const response = await fetch(blynkUrl('isHardwareConnected'), { cache: 'no-store' });
+          const text = (await response.text()).trim().toLowerCase();
+          state.online = text === 'true';
+          if (state.online) state.lastSeen = Date.now();
+        } catch (err) {
+          state.online = false;
+        }
+        updateConnection();
+        updateStats();
+        updatePrimary();
+      }
+
+      function getJsonp(url) {
+        return new Promise(function (resolve, reject) {
+          const callback = 'sb_cb_' + Math.random().toString(36).slice(2);
+          const script = document.createElement('script');
+          const timeout = setTimeout(function () {
+            cleanup();
+            reject(new Error('JSONP timeout'));
+          }, 9000);
+
+          function cleanup() {
+            clearTimeout(timeout);
+            delete window[callback];
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+
+          window[callback] = function (data) {
+            cleanup();
+            resolve(data);
+          };
+          script.onerror = function () {
+            cleanup();
+            reject(new Error('JSONP error'));
+          };
+          script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callback;
+          document.head.appendChild(script);
+        });
+      }
+
+      async function fetchSheets() {
+        if (!state.sheets || state.demo) return;
+        const url = state.sheets + (state.sheets.indexOf('?') === -1 ? '?' : '&') + 'limit=500';
+        try {
+          let data;
+          try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            data = await response.json();
+          } catch (err) {
+            data = await getJsonp(url);
+          }
+
+          if (!data || !data.ok || !Array.isArray(data.rows)) throw new Error('format data tidak dikenal');
+
+          const points = data.rows.map(function (row) {
+            return {
+              ts: new Date(row.ts).getTime(),
+              ppm: Number(row.ppm),
+              hum: Number(row.hum),
+              temp: Number(row.temp),
+              rssi: row.rssi === undefined ? null : Number(row.rssi),
+              status: row.status || deriveStatus(Number(row.ppm))
+            };
+          }).filter(function (point) {
+            return Number.isFinite(point.ts) && Number.isFinite(point.ppm);
+          });
+
+          if (points.length) {
+            state.history = mergeHistory(state.history, points);
+            persistHistory();
+            state.sheetsOk = true;
+            updateAll();
+          }
+        } catch (err) {
+          state.sheetsOk = false;
+          console.warn('[Sheets] gagal mengambil riwayat:', err.message);
+          updateSource();
+        }
+      }
+
+      function mergeHistory(first, second) {
+        const map = {};
+        first.concat(second).forEach(function (point) {
+          if (!point || !Number.isFinite(Number(point.ts))) return;
+          map[point.ts] = point;
+        });
+        return Object.keys(map).map(function (key) { return map[key]; }).sort(function (a, b) { return a.ts - b.ts; }).slice(-3000);
+      }
+
+      function startLive() {
+        clearTimers();
+        state.demo = false;
+        state.online = false;
+        state.source = 'blynk';
+        state.sheetsOk = false;
+        state.failures = 0;
+        state.live = { ppm: null, hum: null, temp: null, rssi: null, status: null };
+        loadHistory();
+        state.lastSeen = state.history.length ? state.history[state.history.length - 1].ts : null;
+        updateAll();
+        fetchLive();
+        checkHardware();
+        if (state.sheets) fetchSheets();
+        state.timers.push(setInterval(fetchLive, 5000));
+        state.timers.push(setInterval(checkHardware, 15000));
+        if (state.sheets) state.timers.push(setInterval(fetchSheets, 60000));
+      }
+
+      function clearTimers() {
+        state.timers.forEach(function (timer) { clearInterval(timer); });
+        state.timers = [];
+      }
+
+      function restart() {
+        clearTimers();
+        if (state.demo || !state.token) {
+          startDemo();
+        } else {
+          startLive();
+        }
+      }
+
+      function openSettings() {
+        $('tokenInput').value = state.token;
+        $('sheetsInput').value = state.sheets;
+        $('warnInput').value = state.warn;
+        $('dangerInput').value = state.danger;
+        $('demoInput').checked = state.demo;
+        $('blynkTest').textContent = '';
+        $('blynkTest').className = 'test-msg';
+        $('sheetsTest').textContent = '';
+        $('sheetsTest').className = 'test-msg';
+        $('settingsModal').hidden = false;
+        setTimeout(function () { $('tokenInput').focus(); }, 30);
+      }
+
+      function closeSettings() {
+        $('settingsModal').hidden = true;
+        $('settingsBtn').focus();
+      }
+
+      function toast(message, isError) {
+        const el = $('toast');
+        el.textContent = message;
+        el.className = 'toast show' + (isError ? ' err' : '');
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(function () {
+          el.className = 'toast';
+        }, 3200);
+      }
+
+      async function testBlynk() {
+        const token = $('tokenInput').value.trim();
+        const target = $('blynkTest');
+        if (!token) {
+          target.textContent = 'Isi token dulu.';
+          target.className = 'test-msg err';
+          return;
+        }
+        target.textContent = 'Menguji…';
+        target.className = 'test-msg';
+        try {
+          const response = await fetch('https://blynk.cloud/external/api/getAll?token=' + encodeURIComponent(token), { cache: 'no-store' });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const data = await response.json();
+          const keys = Object.keys(data);
+          target.textContent = keys.length ? 'Terhubung. Datastream: ' + keys.join(', ').toUpperCase() : 'Terhubung, tetapi belum ada nilai.';
+          target.className = 'test-msg ok';
+        } catch (err) {
+          target.textContent = 'Gagal: ' + err.message;
+          target.className = 'test-msg err';
+        }
+      }
+
+      async function testSheets() {
+        const url = $('sheetsInput').value.trim();
+        const target = $('sheetsTest');
+        if (!url) {
+          target.textContent = 'Isi URL Web App dulu.';
+          target.className = 'test-msg err';
+          return;
+        }
+        target.textContent = 'Menguji…';
+        target.className = 'test-msg';
+        try {
+          let data;
+          const testUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'limit=5';
+          try {
+            const response = await fetch(testUrl, { cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            data = await response.json();
+          } catch (err) {
+            data = await getJsonp(testUrl);
+          }
+          if (!data || !data.ok) throw new Error('respons tidak valid');
+          target.textContent = 'Terhubung. ' + (data.rows ? data.rows.length : 0) + ' baris terbaca.';
+          target.className = 'test-msg ok';
+        } catch (err) {
+          target.textContent = 'Gagal: ' + err.message;
+          target.className = 'test-msg err';
+        }
+      }
+
+      function exportCsv() {
+        if (!state.history.length) {
+          toast('Belum ada data untuk diunduh.', true);
+          return;
+        }
+        const lines = ['timestamp,ppm_ch4,humidity_percent,temperature_c,status,rssi_dbm'];
+        state.history.forEach(function (point) {
+          lines.push([
+            new Date(point.ts).toISOString(),
+            point.ppm,
+            point.hum,
+            point.temp,
+            '"' + String(point.status || '').replace(/"/g, '""') + '"',
+            point.rssi === undefined || point.rssi === null ? '' : point.rssi
+          ].join(','));
+        });
+        const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'smart-biogas-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+        toast('CSV diunduh (' + state.history.length + ' baris).');
+      }
+
+      function bindEvents() {
+        $('settingsBtn').addEventListener('click', openSettings);
+        $('closeSettings').addEventListener('click', closeSettings);
+        $('cancelSettings').addEventListener('click', closeSettings);
+        $('settingsModal').addEventListener('click', function (event) {
+          if (event.target === $('settingsModal')) closeSettings();
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && !$('settingsModal').hidden) closeSettings();
+        });
+
+        $('toggleToken').addEventListener('click', function () {
+          const input = $('tokenInput');
+          const show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          this.textContent = show ? 'Sembunyikan' : 'Lihat';
+        });
+
+        $('testBlynk').addEventListener('click', testBlynk);
+        $('testSheets').addEventListener('click', testSheets);
+        $('csvBtn').addEventListener('click', exportCsv);
+
+        $('settingsForm').addEventListener('submit', function (event) {
+          event.preventDefault();
+          const token = $('tokenInput').value.trim();
+          const sheets = $('sheetsInput').value.trim();
+          const warn = Number($('warnInput').value);
+          const danger = Number($('dangerInput').value);
+          const demo = $('demoInput').checked;
+
+          if (!Number.isFinite(warn) || warn <= 0 || !Number.isFinite(danger) || danger <= warn) {
+            toast('Ambang tidak valid: bahaya harus lebih besar dari waspada.', true);
+            return;
+          }
+          if (!demo && !token) {
+            toast('Isi token Blynk atau aktifkan mode demo.', true);
+            return;
+          }
+
+          state.token = token;
+          state.sheets = sheets;
+          state.warn = warn;
+          state.danger = danger;
+          state.demo = demo;
+          saveSettings();
+          closeSettings();
+          restart();
+          toast(demo ? 'Mode demo aktif.' : 'Pengaturan disimpan. Menghubungkan ke Blynk…');
+        });
+
+        $('resetData').addEventListener('click', function () {
+          if (!confirm('Hapus riwayat lokal di browser ini? Data di Google Sheets tidak terhapus.')) return;
+          try {
+            localStorage.removeItem(LS.liveHistory);
+            localStorage.removeItem(LS.demoHistory);
+          } catch (err) { /* abaikan */ }
+          state.history = [];
+          closeSettings();
+          restart();
+          toast('Data lokal dihapus.');
+        });
+
+        document.querySelectorAll('.tab').forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            state.metric = tab.dataset.metric;
+            document.querySelectorAll('.tab').forEach(function (item) {
+              item.classList.toggle('active', item === tab);
+              item.setAttribute('aria-selected', item === tab ? 'true' : 'false');
+            });
+            updateChart();
+          });
+        });
+
+        document.querySelectorAll('.range').forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.range = Number(button.dataset.range);
+            document.querySelectorAll('.range').forEach(function (item) {
+              item.classList.toggle('active', item === button);
+            });
+            updateChart();
+          });
+        });
+      }
+
+      function init() {
+        loadSettings();
+        bindEvents();
+        createChart();
+        if (state.demo || !state.token) {
+          startDemo();
+        } else {
+          startLive();
+        }
+        setInterval(function () {
+          if (!state.demo && !state.online) {
+            const hint = $('ch4Hint');
+            if (hint && state.live.ppm !== null) {
+              hint.textContent = 'Perangkat sedang offline. Menampilkan data terakhir ' + relativeTime(state.lastSeen) + '.';
+            }
+          }
+        }, 5000);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

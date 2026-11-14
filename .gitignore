@@ -1,0 +1,33 @@
+# ============================================================
+#  SECRETS — JANGAN PERNAH DI-COMMIT
+# ============================================================
+config.h
+secrets.h
+.env
+.env.*
+*.secret
+
+# Konfigurasi lokal dashboard (kalau nanti ditambahkan)
+dashboard/config.js
+
+# ============================================================
+#  OS & EDITOR
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# ============================================================
+#  BUILD & LOG
+# ============================================================
+build/
+dist/
+*.bin
+*.elf
+*.map
+*.log
+__pycache__/
+*.pyc
